@@ -12,10 +12,45 @@
   <a class="nav-btn" href="ajout.html">➕ Ajouter un DVD</a>
 </header>
 
+<!-- Ouverture du CSV -->
 <div class="card">
   <button class="primary" onclick="ouvrirCSV()">📂 Ouvrir dvdtheque.csv</button>
 </div>
 
+<!-- Stats + Recherche -->
+<div class="search-layout">
+
+  <!-- Statistiques -->
+  <div class="card stats">
+    <h3>📊 Statistiques</h3>
+    <p>🎬 Total de films : <strong id="statTotal">0</strong></p> 
+    <p>💰 Valeur totale : <strong id="statValeur">0 €</strong></p>
+    <p>🏆 Palmes d'Or : <strong id="statPalme">0</strong></p>
+    <p>🎖 Films récompensés : <strong id="statRecompense">0</strong></p>
+  </div>
+
+  <!-- Recherche -->
+  <div class="card">
+    <h3>🔍 Recherche</h3>
+
+    <input id="searchRealisateur" placeholder="Réalisateur">
+    <input id="searchGenre" placeholder="Genre">
+    <input id="searchPays" placeholder="Pays">
+    <input id="searchPrix" type="number" placeholder="Prix maximum (€)">
+
+    <label>Récompense</label>
+    <select id="searchRecompense">
+      <option value="">Tous</option>
+      <option value="Oui">Oui</option>
+      <option value="Non">Non</option>
+    </select>
+
+    <button class="primary" onclick="render()">Appliquer la recherche</button>
+  </div>
+
+</div>
+
+<!-- Résultats -->
 <div id="grid" class="grid"></div>
 
 <script>
@@ -37,43 +72,96 @@ async function ouvrirCSV() {
 function chargerCSV(text) {
   const lines = text.split("\n").slice(1);
   dvds = lines.filter(l => l.trim()).map(l => {
-    const v = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(x => x.replace(/"/g, ""));
+    const v = l
+      .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+      .map(x => x.replace(/"/g, ""));
     return {
-      titre:v[0], annee:v[1], genres:v[2], realisateurs:v[3],
-      pays:v[4], acteurs:v[5], palme:v[6], recompense:v[7],
-      duree:v[8], coffret:v[9], groupe:v[10],
-      prix:v[11], support:v[12]
+      titre: v[0],
+      annee: v[1],
+      genres: v[2],
+      realisateurs: v[3],
+      pays: v[4],
+      acteurs: v[5],
+      palme: v[6],
+      recompense: v[7],
+      duree: v[8],
+      coffret: v[9],
+      groupe: v[10],
+      prix: v[11],
+      support: v[12]
     };
   });
 }
 
+function updateStats(filteredDvds = dvds) {
+  let total = 0;
+  let palmes = 0;
+  let recompenses = 0;
+
+  filteredDvds.forEach(d => {
+    total += parseFloat(d.prix || 0);
+    if (d.palme === "Oui") palmes++;
+    if (d.recompense === "Oui") recompenses++;
+  });
+
+  statValeur.textContent = total.toFixed(2) + " €";
+  statPalme.textContent = palmes;
+  statRecompense.textContent = recompenses+palmes;
+  statTotal.textContent = filteredDvds.length; // Total de films filtrés
+}
+
 function render() {
   grid.innerHTML = "";
-  dvds.forEach((d, i) => {
+
+  const r = searchRealisateur.value.toLowerCase();
+  const g = searchGenre.value.toLowerCase();
+  const pa = searchPays.value.toLowerCase();
+  const pr = parseFloat(searchPrix.value);
+  const rec = searchRecompense.value;
+
+  const filtered = dvds.filter(d => {
+    return (
+      (!r || d.realisateurs.toLowerCase().includes(r)) &&
+      (!g || d.genres.toLowerCase().includes(g)) &&
+      (!pa || d.pays.toLowerCase().includes(pa)) &&
+      (!pr || parseFloat(d.prix || 0) <= pr) &&
+      (!rec || d.recompense === rec)
+    );
+  });
+
+  filtered.forEach((d, i) => {
     const c = document.createElement("div");
     c.className = "card";
     c.innerHTML = `
       <h2>${d.titre}</h2>
-      <p>${d.annee} • ${d.support}</p>
-      <p>${d.genres}</p>
-      <p>🎬 ${d.realisateurs}</p>
-      <p>🌍 ${d.pays}</p>
+      <p><strong>${d.annee}</strong> • ${d.support}</p>
+      <p>🎞 ${d.genres}</p>
+      <p>🎬 Réalisateur(s) : ${d.realisateurs}</p>
+      <p>🎭 Acteurs : ${d.acteurs}</p>
+      <p>🌍 Pays : ${d.pays}</p>
       <p>⏱ ${d.duree} min</p>
       <p>🏆 Palme d'Or : ${d.palme}</p>
+      <p>🎖 Récompense : ${d.recompense}</p>
       <p>🎁 Coffret : ${d.coffret} ${d.groupe ? "(" + d.groupe + ")" : ""}</p>
       <p>💰 ${d.prix} €</p>
+
       <button class="danger" onclick="supprimer(${i})">❌ Supprimer</button>
     `;
     grid.appendChild(c);
   });
+
+  updateStats(filtered); // Met à jour stats selon la recherche
 }
 
 async function sauvegarderCSV() {
   const writable = await fileHandle.createWritable();
-  let csv = "Titre,Année,Genres,Realisateurs,Pays,Acteurs,PalmeOr,AutreRecompense,Duree,Coffret,GroupeCoffret,Prix,Support\n";
+  let csv =
+    "Titre,Année,Genres,Realisateurs,Pays,Acteurs,PalmeOr,AutreRecompense,Duree,Coffret,GroupeCoffret,Prix,Support\n";
+
   dvds.forEach(d => {
     csv += Object.values(d).map(v => `"${v || ""}"`).join(",") + "\n";
   });
+
   await writable.write(csv);
   await writable.close();
 }

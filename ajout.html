@@ -12,9 +12,12 @@
   <a class="nav-btn" href="visualisation.html">📋 Voir la DVDthèque</a>
 </header>
 
+<!-- Indicateur état fichier -->
 <div class="card">
+  <p id="fileStatus" class="status status-off">
+    🔴 Aucun fichier DVD chargé
+  </p>
   <button class="primary" onclick="ouvrirCSV()">📂 Ouvrir dvdtheque.csv</button>
-  <p class="info">À faire une seule fois au démarrage</p>
 </div>
 
 <form id="form" class="card">
@@ -41,21 +44,34 @@
     <option>4K</option>
   </select>
 
-  <button class="primary">➕ Ajouter</button>
+  <button id="addBtn" class="primary" disabled>➕ Ajouter</button>
 </form>
 
 <script>
 let fileHandle;
 let dvds = [];
 
-async function ouvrirCSV() {
-  [fileHandle] = await window.showOpenFilePicker({
-    types: [{ description: "DVDthèque", accept: { "text/csv": [".csv"] } }]
-  });
+const statusText = document.getElementById("fileStatus");
+const addBtn = document.getElementById("addBtn");
 
-  const file = await fileHandle.getFile();
-  const text = await file.text();
-  chargerCSV(text);
+async function ouvrirCSV() {
+  try {
+    [fileHandle] = await window.showOpenFilePicker({
+      types: [{ description: "DVDthèque", accept: { "text/csv": [".csv"] } }]
+    });
+
+    const file = await fileHandle.getFile();
+    const text = await file.text();
+    chargerCSV(text);
+
+    statusText.textContent = "🟢 Fichier DVD chargé";
+    statusText.classList.remove("status-off");
+    statusText.classList.add("status-on");
+    addBtn.disabled = false;
+
+  } catch {
+    // utilisateur a annulé
+  }
 }
 
 function chargerCSV(text) {
@@ -73,16 +89,22 @@ function chargerCSV(text) {
 
 async function sauvegarderCSV() {
   const writable = await fileHandle.createWritable();
-  let csv = "Titre,Année,Genres,Realisateurs,Pays,Acteurs,PalmeOr,AutreRecompense,Duree,Coffret,GroupeCoffret,Prix,Support\n";
+  let csv =
+    "Titre,Année,Genres,Realisateurs,Pays,Acteurs,PalmeOr,AutreRecompense,Duree,Coffret,GroupeCoffret,Prix,Support\n";
+
   dvds.forEach(d => {
     csv += Object.values(d).map(v => `"${v || ""}"`).join(",") + "\n";
   });
+
   await writable.write(csv);
   await writable.close();
 }
 
 form.onsubmit = async e => {
   e.preventDefault();
+
+  if (!fileHandle) return;
+
   dvds.push({
     titre:titre.value,
     annee:annee.value,
@@ -98,6 +120,7 @@ form.onsubmit = async e => {
     prix:prix.value,
     support:support.value
   });
+
   await sauvegarderCSV();
   form.reset();
   alert("DVD ajouté et sauvegardé !");
