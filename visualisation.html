@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>DVDthèque</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>📋 Ma DVDthèque</h1>
+  <a href="ajout.html" class="nav-btn">➕ Ajouter un DVD</a>
+</header>
+
+<div id="liste" class="grid"></div>
+
+<script>
+const container = document.getElementById("liste");
+let dvds = JSON.parse(localStorage.getItem("dvds") || "[]");
+
+function render() {
+  container.innerHTML = "";
+  dvds.forEach((d, i) => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <h2>${d.titre}</h2>
+      <p><strong>${d.annee}</strong> • ${d.support}</p>
+      <p>${d.genres}</p>
+      <p>🎬 ${d.realisateurs}</p>
+      <p>🌍 ${d.pays}</p>
+      <p>⏱ ${d.duree} min</p>
+      <p>🏆 Palme d'Or : ${d.palme}</p>
+      <p>🎁 Coffret : ${d.coffret} ${d.groupe ? "(" + d.groupe + ")" : ""}</p>
+      <p>💰 ${d.prix} €</p>
+      <button class="danger" onclick="supprimer(${i})">❌ Supprimer</button>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function supprimer(index) {
+  if (confirm("Supprimer ce DVD ?")) {
+    dvds.splice(index, 1);
+    localStorage.setItem("dvds", JSON.stringify(dvds));
+    render();
+  }
+}
+
+render();
+</script>
+
+</body>
+</html>
