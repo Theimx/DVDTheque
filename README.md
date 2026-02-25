@@ -13,3 +13,7 @@ A web app to manage and visualize the state of your DVD colection.
 - Now you can see and browse through your DVD library with the **visualisation.html** file.
   
 ---
+## 📸 Screenshot
+<p align="center">
+  <img src="readme/add.png" width="700">
+</p>
