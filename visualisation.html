@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>DVDthèque</title>
+<title>DVDTheque</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -32,6 +32,9 @@
   <!-- Recherche -->
   <div class="card">
     <h3>🔍 Recherche</h3>
+
+    <!-- ✅ NOUVEAU : Recherche par titre -->
+    <input id="searchTitre" placeholder="Titre du film">
 
     <input id="searchRealisateur" placeholder="Réalisateur">
     <input id="searchGenre" placeholder="Genre">
@@ -106,13 +109,15 @@ function updateStats(filteredDvds = dvds) {
 
   statValeur.textContent = total.toFixed(2) + " €";
   statPalme.textContent = palmes;
-  statRecompense.textContent = recompenses+palmes;
-  statTotal.textContent = filteredDvds.length; // Total de films filtrés
+  statRecompense.textContent = recompenses + palmes;
+  statTotal.textContent = filteredDvds.length;
 }
 
 function render() {
   grid.innerHTML = "";
 
+  // ✅ NOUVEAU : récupération du titre
+  const t = searchTitre.value.toLowerCase();
   const r = searchRealisateur.value.toLowerCase();
   const g = searchGenre.value.toLowerCase();
   const pa = searchPays.value.toLowerCase();
@@ -121,6 +126,7 @@ function render() {
 
   const filtered = dvds.filter(d => {
     return (
+      (!t || d.titre.toLowerCase().includes(t)) &&   // ✅ filtre par titre
       (!r || d.realisateurs.toLowerCase().includes(r)) &&
       (!g || d.genres.toLowerCase().includes(g)) &&
       (!pa || d.pays.toLowerCase().includes(pa)) &&
@@ -150,7 +156,7 @@ function render() {
     grid.appendChild(c);
   });
 
-  updateStats(filtered); // Met à jour stats selon la recherche
+  updateStats(filtered);
 }
 
 async function sauvegarderCSV() {
