@@ -1,6 +1,6 @@
 **Language : HTML/CSS/JavaScript**  
 **Status : Complete**  
-**Software Version : 1.0**  
+**Software Version : 1.1**  
 
 ---
 ### *Description* :   
@@ -14,6 +14,10 @@ A web app to manage and visualize the state of your DVD colection.
   
 ---
 ### *Visual* :
-
+<p align="center">
+   <img src="readme/add.png" width="900">
+   <img src="readme/view.png" width="900">
+   
+</p>
    
 ---
